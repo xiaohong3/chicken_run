@@ -1,0 +1,6 @@
+bin/
+chicken_run.cbp
+chicken_run.depend
+obj/
+chicken_run.layout
+
