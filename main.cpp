@@ -8,6 +8,7 @@ using namespace std;
 bool init();
 
 void render();
+SDL_Texture* load_texture(const string &str);
 void run_game();
 
 void add_enemy();
@@ -40,7 +41,13 @@ SDL_Renderer* renderer = nullptr;
 SDL_Rect player;
 SDL_Rect top_bar;
 SDL_Rect bottom_bar;
+SDL_Rect background;
 std::vector<Enemy> enemies;
+
+SDL_Texture* backgroundTexture = nullptr;
+SDL_Texture* enemyTexture = nullptr;
+SDL_Texture* playerTexture = nullptr;
+SDL_Texture* barTexture = nullptr;
 
 int main()
 {
@@ -91,6 +98,16 @@ bool init()
 
 void setup_start()
 {
+    background.x = 0;
+    background.y = 0;
+    background.w = WIN_W;
+    background.h = WIND_H;
+
+    backgroundTexture = load_texture("resources/background.bmp");
+    barTexture = load_texture("resources/bar.bmp");
+    enemyTexture = load_texture("resources/enemy.bmp");
+    playerTexture = load_texture("resources/player.bmp");
+
     for (int i = 0; i < ENEMY_AMOUNT; ++i)
     {
         add_enemy();
@@ -110,6 +127,7 @@ void setup_start()
 
     player.w = PLAYER_SIZE;
     player.h = PLAYER_SIZE;
+
 }
 
 void reset_player_pos()
@@ -267,26 +285,45 @@ bool check_collision(const SDL_Rect& rect1, const SDL_Rect& rect2)
     return true;
 }
 
+SDL_Texture* load_texture(const string& str)
+{
+    SDL_Surface* surface = SDL_LoadBMP(str.c_str());
+
+    if (surface == nullptr)
+    {
+        printf("SDL surface could not be loaded! SDL Error: %s\n", SDL_GetError());
+        return nullptr;
+    }
+    else
+    {
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+        if (texture == nullptr)
+        {
+            printf("SDL texture could not be created! SDL Error: %s\n", SDL_GetError());
+            return nullptr;
+        }
+        else
+        {
+            return texture;
+
+        }
+    }
+}
+
 void render()
 {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
     SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderCopy(renderer, backgroundTexture, NULL, &background);
+    SDL_RenderCopy(renderer, barTexture, NULL, &top_bar);
+    SDL_RenderCopy(renderer, barTexture, NULL, &bottom_bar);
 
-    SDL_RenderFillRect(renderer, &top_bar);
-    SDL_RenderFillRect(renderer, &bottom_bar);
+	SDL_RenderCopy(renderer, playerTexture, NULL, &player);
 
-	SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-
-	SDL_RenderFillRect(renderer, &player);
-
-	SDL_SetRenderDrawColor( renderer, 255, 0, 0, 255);
-
-	for (Enemy& p : enemies)
+	for (const Enemy& p : enemies)
 	{
-        SDL_RenderFillRect(renderer, &p.pos);
+        SDL_RenderCopy(renderer, enemyTexture, NULL, &p.pos);
 	}
 
 	SDL_RenderPresent(renderer);
